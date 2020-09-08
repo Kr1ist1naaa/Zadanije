@@ -1,0 +1,18 @@
+"""T02."""
+
+nums = [5, 3, 6, 6, 6, 4, 6, 3, 45, 95, 66, 6]
+need_to_count = False
+counter = 0
+tmp = 0
+
+for num in nums:
+    if num != 6:
+        need_to_count = False
+        counter = max(counter, tmp)
+        tmp = 0
+    elif num == 6 and need_to_count:
+        tmp += 1
+    elif num == 6:
+        need_to_count = True
+
+print(counter)
