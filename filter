@@ -1,0 +1,9 @@
+def filter_letters(list):
+    lst = []
+    for element in list:
+        if element.isalpha():
+                lst.append(element)
+
+
+    return lst
+print(filter_letters([1, "a", "3"]))
