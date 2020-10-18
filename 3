@@ -1,0 +1,48 @@
+"""Third task."""
+
+
+def is_even(num: int) -> bool:
+    """
+    Kirjuta funktsioon mis kontrollib, kas antud arv on paaris või paaritu.
+    Kui arv on paaris tagastatakse väärtus True.
+
+    :param num: int
+    :return: bool
+    """
+    if num % 2 == 0:
+        return True
+    return False
+
+
+def multiply_between(start: int, end: int) -> int:
+    """
+    Kirjutada funktsioon, mis korrutab kõik arvud kokku, mis jäävad 'start' ja 'end' arvude vahemikku.
+    'start' ja 'end' kaasa arvatud ning kõik arvud on järjestikku.
+    Näide: multiply_between(1, 3) --> 1 * 2 * 3 = 6
+
+    :param start: int
+    :param end: int
+    :return: int
+    """
+    list = []
+    for number in range(start, end + 1):
+        list.append(number)
+    result = 1
+    for num in list:
+        result = result * num
+    return result
+
+def sum_numbers(list):
+    result = 0
+    for element in list:
+        if isinstance(element, int):
+            result += element
+        else:
+            if element.isdigit():
+                result += int(element)
+
+def remove_vowels(word):
+    for vowel in "aeiouAEIOU":
+        word = word.replace(vowel, "")
+    return word
+
