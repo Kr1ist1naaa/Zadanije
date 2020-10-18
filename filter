@@ -3,6 +3,7 @@ def filter_letters(list):
     for element in list:
         if element.isalpha():
                 lst.append(element)
+        else:
 
 
     return lst
