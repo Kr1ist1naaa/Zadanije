@@ -1,0 +1,61 @@
+"""Third task."""
+
+
+def is_even(num: int) -> bool:
+    """Control function."""
+    if num % 2 == 0:
+        return True
+    return False
+
+
+def multiply_between(start: int, end: int) -> int:
+    """Write function."""
+    list = []
+    for number in range(start, end + 1):
+        list.append(number)
+    result = 1
+    for num in list:
+        result = result * num
+    return result
+
+
+def sum_numbers(list):
+    """Sum."""
+    result = 0
+    for element in list:
+        if isinstance(element, int):
+            result += element
+        else:
+            if element.isdigit():
+                result += int(element)
+    return result
+
+
+def filter_letters(list):
+    """Filter."""
+    lst = []
+    for element in list:
+        if str(element).isalpha():
+            lst.append(element)
+    return lst
+
+
+def remove_vowels(word):
+    """Remove."""
+    for vowel in "aeiouõäöüAEIOU":
+        word = word.replace(vowel, "")
+    return word
+
+
+def make_bricks(small, big, goal):
+    """'Brake."""
+    pass
+
+
+if __name__ == '__main__':
+    print(multiply_between(1, 5))  # --> 120
+    print(multiply_between(2, 7))  # --> 5040
+    print(multiply_between(4, 14))  # --> 14529715200
+    print(multiply_between(0, 7))  # --> 0
+    print(make_bricks(2, 3, 12))  # --> True
+    print(make_bricks(1, 3, 12))  # --> False
