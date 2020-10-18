@@ -1,0 +1,19 @@
+"""Ettevalmistused."""
+
+print("Hello, Kristina")
+
+age = int(input("How old are you? "))
+print(f"You are {age} years old.")
+
+color = input("Color: ")
+object = input("Object: ")
+activity = input("Activity: ")
+print(f"Roses are {color},\n{object} are blue,\nI love to {activity}\nAnd so will you!")
+
+seconds = int(input("Seconds: "))
+second = seconds % (24 * 3600)
+hours = second // 3600
+second %= 3600
+minutes = second // 60
+second %= 60
+print(f"{seconds} sekundit on {hours} tund(i) ja {minutes} minut(it).")
