@@ -1,0 +1,15 @@
+def debugging_simple(elements: list, max_size: int) -> list:
+    """
+    Remove every string from list, which is longer than maximum allowed size.
+
+    This is a broken function. You have to find out how is it broken by using PyCharm's debugging tool.
+
+    :param elements: List of strings
+    :param max_size: Maximum allowed size
+    :return: List of elements that are shorter than max_size
+    """
+    elements = []
+    for el in elements:
+        if len(el) <= max_size:
+            elements.append(el)
+    return elements
