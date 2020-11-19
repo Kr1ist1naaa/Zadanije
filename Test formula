@@ -1,0 +1,151 @@
+"""Test."""
+import pytest
+import copy
+import re
+import csv
+from formula_one3 import Driver, Race, FormulaOne
+
+filename = "example.txt"
+
+
+class Test:
+    """Test."""
+
+    def test_driver_add_result(self):
+        """Test."""
+        formula = Driver("Pes Gog", "Pes Team")
+        formula.add_result(1, 25)
+        assert formula.get_results()[1] == 25
+
+    def test_driver_get_results_copy(self):
+        """Test."""
+        pes = Driver("Pes Gog", "Pes Team")
+        pes.add_result(1, 25)
+        pes.get_results()[1] = 10
+        assert pes.get_results()[1] == 25, "don't change original dictionary"
+
+    def test_driver_get_points(self):
+        """Test."""
+        formula = Driver("Pes Gog", "Pes Team")
+        formula.add_result(1, 25)
+        formula.add_result(2, 15)
+        assert formula.get_points() == 40
+
+    def test_race_read_file_to_list(self):
+        """Test."""
+        race = Race(filename)
+        assert race.data[0] == \
+               {'Name': 'Mika Hakkinen', 'Diff': '', 'Team': 'Mclaren-Mercedes', 'Time': 79694, 'Race': 1}
+
+        assert race.data[-1] == \
+               {'Name': 'Pedro de la Rosa', 'Diff': '', 'Team': 'Arrows-Supertec', 'Time': 83315, 'Race': 3}
+
+    def test_race_raises_right_exception(self):
+        """Test."""
+        with pytest.raises(FileNotFoundError):
+            Race(filename + "a")
+
+    def test_race_raises_with_right_message(self):
+        """Test."""
+        with pytest.raises(FileNotFoundError) as ex_info:
+            Race(filename + "a")
+            assert "No file found!" == str(ex_info.value), "exception message must be 'No file found!'"
+
+    def test_race_filter_data_by_list_return_copy(self):
+        """Test."""
+        race = Race(filename)
+        data = copy.deepcopy(race.data)
+        race.filter_data_by_race(1)
+        assert race.data == data, "don't change original data"
+
+    def test_race_format_time_right_zeros(self):
+        """Test."""
+        time_in_ms = "69004"
+        formatted_time = '1:09.004'
+        assert formatted_time == Race.format_time(time_in_ms)
+
+    def test_race_get_results_by_race(self):
+        """Test."""
+        race = Race(filename)
+        first_place = \
+            {'Name': 'Jenson Button', 'Diff': '', 'Team': 'Williams-BMW',
+             'Time': '1:17.606', 'Race': 1, 'Place': 1, 'Points': 25}
+        last_place = \
+            {'Name': 'Pedro de la Rosa', 'Diff': '+0:04.995', 'Team': 'Arrows-Supertec',
+             'Time': '1:22.601', 'Race': 1, 'Place': 7, 'Points': 6}
+        print(race.get_results_by_race(1))
+        assert race.get_results_by_race(1)[0] == first_place
+        assert race.get_results_by_race(1)[-1] == last_place
+
+    def test_race_get_results_by_race_full_order(self):
+        """Test."""
+        race = Race(filename)
+        assert race.get_results_by_race(1) == sorted(race.get_results_by_race(1), key=lambda d: d["Time"])
+
+    def test_get_results_by_race(self):
+        """Test."""
+        race = Race(filename)
+        assert race.get_results_by_race(1)[0]["Place"] == 1
+
+    def test_formula_one_write_race_results_to_file(self):
+        """Test."""
+        race = Race(filename)
+        race_dict = race.get_results_by_race(1)[1:]
+        formula_one = FormulaOne(filename)
+        formula_one.write_race_results_to_file(1)
+        with open("results_for_race_1.txt", 'r', encoding="utf-8") as file:
+            file.readline()
+            file.readline()
+            file.readline()
+            for index, line in enumerate(file):
+                values = re.split(r"\s{2,}", line)
+                assert values[0] == str(race_dict[index]["Place"])
+                assert values[1] == str(race_dict[index]["Name"])
+                assert values[2] == str(race_dict[index]["Team"])
+                assert values[3] == str(race_dict[index]["Time"])
+                assert values[4] == str(race_dict[index]["Diff"])
+                assert values[5] == str(race_dict[index]["Points"])
+
+    def test_formula_one_write_race_results_to_csv(self):
+        """Test."""
+        race = Race(filename)
+        race_dict = race.get_results_by_race(1)
+        formula_one = FormulaOne(filename)
+        formula_one.write_race_results_to_csv(1)
+        with open("race_1_results.csv", 'r', encoding="utf-8") as file:
+            reader = csv.reader(file, delimiter=",")
+            for index, line in enumerate(reader):
+                if index != 0:
+                    assert line[0] == str(race_dict[index - 1]["Place"])
+                    assert line[1] == str(race_dict[index - 1]["Name"])
+                    assert line[2] == str(race_dict[index - 1]["Team"])
+                    assert line[3] == str(race_dict[index - 1]["Time"])
+                    assert line[4] == str(race_dict[index - 1]["Diff"])
+                    assert line[5] == str(race_dict[index - 1]["Points"])
+
+    def test_formula_one_write_championship_to_file(self):
+        """Test."""
+        formula_one = FormulaOne(filename)
+        formula_one.write_championship_to_file()
+        with open("championship_results.txt", 'r', encoding="utf-8") as file:
+            file.readline()
+            file.readline()
+            assert file.readline() == "1         Jenson Button            Williams-BMW             50    \n"
+
+    # def test_formula_one_fill_dict_with_drivers_objects(self):
+    #     """Test."""
+    #     formula_one = FormulaOne(filename)
+    #     race = Race(filename)
+    #     drivers_data = race.get_results_by_race(1)
+    #     drivers = formula_one.fill_dict_with_drivers_object(drivers_data)
+    #     for driver in drivers:
+    #         assert driver in map(lambda d: d["Name"], drivers_data)
+    #
+    # def test_formula_one_update_drivers_dict(self):
+    #     """Test."""
+    #     formula_one = FormulaOne(filename)
+    #     race = Race(filename)
+    #     drivers_data1 = race.get_results_by_race(1)
+    #     drivers = formula_one.fill_dict_with_drivers_object(drivers_data1)
+    #     drivers = formula_one.update_drivers_dict(drivers, 3)
+    #     assert max(drivers.values(), key=Driver.get_points).name == "Jenson Button"
