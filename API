@@ -1,0 +1,49 @@
+import pickle
+import os.path
+import googleapiclient.discovery
+from googleapiclient.discovery import build
+
+
+def get_links_from_spreadsheet(id: str, token: str) -> list:
+    """Should get a list of strings from the first column of a Google Spreadsheet with the given ID."""
+    range_name = 'Class Data!A1:A'
+
+    if os.path.exists('token.pickle'):
+        with open(token, 'rb') as token:
+            creds = pickle.load(token)
+
+    service = build('sheets', 'v4', credentials=creds)
+
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=id, range=range_name).execute()
+    values = result.get('values', [])
+    res = []
+    for el in values:
+        res.append(el[0])
+    return res
+
+def get_links_from_playlist(link: str, developer_key: str) -> list:
+    """Should get a list of links to songs in the Youtube playlist with the given address."""
+    end = []
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    api_service_name = "youtube"
+    api_version = "v3"
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey=developer_key)
+    request = youtube.playlistItems().list(
+        part="contentDetails",
+        playlistId=link.split("=")[1],
+        maxResults=100
+    )
+    response = request.execute()
+    for el in response['items']:
+        temp = el['contentDetails']
+        temp = temp["videoId"]
+        end.append(f"https://www.youtube.com/watch?v=%7Btemp%7D%22{temp}")
+    return end
+
+if __name__ == '__main__'
+    main()
+    #lisp = get_links_from_spreadsheet('1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms', 'token.pickle')
+    #for name in lisp:
+        #print(name)
