@@ -1,0 +1,282 @@
+"""Board Games."""
+
+
+def create_game_from_data_list(data_list: list) -> 'Game':
+    """Create game from data."""
+    game_type = data_list[2]
+    if game_type == "points":
+        game = GameWithPoints(data_list[0], data_list[1], data_list[3])
+    elif game_type == "places":
+        game = GameWithPlaces(data_list[0], data_list[1], data_list[3])
+    else:
+        game = GameWithWinner(data_list[0], data_list[1], data_list[3])
+    return game
+
+
+class Statistics:
+    """Board Games statistics class."""
+
+    def __init__(self, filename):
+        """Constructor."""
+        self.filename = filename
+        self.games = self.read_file_to_list()
+
+    def get(self, path: str):
+        """Get some info."""
+        if path.startswith('/player/'):
+            result = self.get_player(path.replace('/player/', ""))
+
+        elif path.startswith('/game/'):
+            result = self.get_game(path.replace('/game/', ""))
+
+        else:
+            result = self.get_other(path)
+
+        return result
+
+    def get_player(self, partial_path):
+        """Called in cases when path starts with '/player'."""
+        name, command = partial_path.split("/")
+        player = Player(name)
+        for game in self.games:
+            if player.name in game.players:
+                player.add_game(game)
+
+        if command == "amount":
+            return player.get_games_count()
+
+        if command == "favourite":
+            return player.get_favourite_game()
+
+        if command == "won":
+            return player.get_games_won()
+
+    def get_game(self, partial_path):
+        """Called in cases when path starts with '/game'."""
+        name, command = partial_path.split("/")
+
+        if command == "amount":
+            list_of_game_names = list(map(lambda game: game.name, self.games))
+            # list_of_game_names = [game.name for game in self.games]
+            return list_of_game_names.count(name)
+
+        valid_games = list(filter(lambda game: game.name == name, self.games))
+        player_names = self.get_other("/players")
+
+        if command == "player-amount":
+            player_count_dict = {}
+            for game in valid_games:
+                player_count = len(game.players)
+                if player_count not in player_count_dict:
+                    player_count_dict[player_count] = 1
+                else:
+                    player_count_dict[player_count] += 1
+            return max(player_count_dict, key=lambda count: player_count_dict.get(count))
+
+        players_wins_dict = {}
+        for player_name in player_names:
+            player = Player(player_name)
+            for game in valid_games:
+                player.add_game(game)
+                if game.get_winner() == player_name:
+                    if player not in players_wins_dict:
+                        players_wins_dict[player] = 1
+                    else:
+                        players_wins_dict[player] += 1
+
+        if command == "most-wins":
+            return max(players_wins_dict, key=lambda p: players_wins_dict.get(p))
+
+        if command == "most-frequent-winner":
+            return max(players_wins_dict, key=lambda p: players_wins_dict.get(p) / len(p.games))
+
+        if type(valid_games[0]) != GameWithWinner:
+            players_losses_dict = {}
+            for player_name in player_names:
+                player = Player(name)
+                for game in valid_games:
+                    player.add_game(game)
+                    if game.get_loser() == player_name:
+                        if player not in players_losses_dict:
+                            players_losses_dict[player] = 1
+                        else:
+                            players_losses_dict[player] += 1
+
+            if command == "most-losses":
+                return max(players_losses_dict, key=lambda p: players_losses_dict.get(p))
+
+            if command == "most-frequent-loser":
+                return max(players_losses_dict, key=lambda p: players_losses_dict.get(p) / len(p.games))
+
+        if type(valid_games[0]) == GameWithPoints and command == "record-holder":
+            winners = {}
+            for game in valid_games:
+                player_name = game.get_winner()
+                points = max(game.points)
+                if player_name not in winners or points > winners.get(player_name):
+                    winners[player_name] = points
+
+            return max(winners, key=lambda player_name: winners.get(player_name))
+
+    def get_other(self, path):
+        """Called when path doesn't start with '/player' nor '/game'."""
+        if path == "/players":
+            all_players = []
+            for game in self.games:
+                for player in game.players:
+                    if player not in all_players:  # DELETE IF NO NEED!!!
+                        all_players.append(player)
+            return all_players
+
+        elif path == "/games":
+            all_games = []
+            for game in self.games:
+                if game.name not in all_games:
+                    all_games.append(game.name)
+            return all_games
+
+        elif "/total" in path:
+            if path == "/total":
+                return len(self.games)
+
+            result_type = path.split("/")[-1]
+            if result_type == "points":
+                game_class = GameWithPoints
+            elif result_type == "places":
+                game_class = GameWithPlaces
+            else:
+                game_class = GameWithWinner
+
+            counter = 0
+            for game in self.games:
+                if type(game) == game_class:
+                    counter += 1
+            return counter
+
+    def read_file_to_list(self):
+        """Read file."""
+        games_list = []
+        with open(self.filename, 'r') as file:
+            for line in file:
+                data_list = line.split(";")
+                game = create_game_from_data_list(data_list)
+                games_list.append(game)
+        return games_list
+
+
+class Player:
+    """Player class."""
+
+    def __init__(self, name):
+        """Player constructor."""
+        self.name = name
+        self.games = []
+
+    def add_game(self, game: 'Game'):
+        """Add game to list."""
+        if game not in self.games:
+            self.games.append(game)
+
+    def get_games_count(self):
+        """Return games count."""
+        return len(self.games)
+
+    def get_favourite_game(self) -> str:
+        """Get player's favourite game."""
+        names_dict = {}
+        for game in self.games:
+            if game.name not in names_dict:
+                names_dict[game.name] = 1
+            else:
+                names_dict[game.name] += 1
+
+        return max(names_dict, key=lambda name: names_dict.get(name))
+
+    def get_games_won(self) -> int:
+        """Get count of games."""
+        how_much_wins = 0
+        for game in self.games:
+            if game.get_winner() == self.name:
+                how_much_wins += 1
+        return how_much_wins
+
+
+class Game:
+    """Game class."""
+
+    def __init__(self, name: str, players_string: str):
+        """Game constructor."""
+        self.name = name
+        self.players = players_string.split(",")
+
+    def get_winner(self):
+        """Abstract method."""
+        pass
+
+    def get_loser(self):
+        """Abstract loser."""
+        pass
+
+
+class GameWithPoints(Game):
+    """Game with points as result."""
+
+    def __init__(self, name: str, players: str, points_string: str):
+        """Game with points constructor."""
+        super().__init__(name, players)
+        self.points = [int(points) for points in points_string.split(",")]
+
+    def get_winner(self):
+        """Get player with greatest points."""
+        points = max(self.points)
+        index = self.points.index(points)
+        player = self.players[index]
+        return player
+
+    def get_loser(self):
+        """Get player with worst points."""
+        points = min(self.points)
+        index = self.points.index(points)
+        player = self.players[index]
+        return player
+
+
+class GameWithPlaces(Game):
+    """Game with places as result."""
+
+    def __init__(self, name: str, players: str, places_string: str):
+        """Game with places constructor."""
+        super().__init__(name, players)
+        self.places = places_string.split(",")
+
+    def get_winner(self):
+        """Get first dude from places list."""
+        return self.places[0]
+
+    def get_loser(self):
+        """Get last dude from places list."""
+        return self.places[-1]
+
+
+class GameWithWinner(Game):
+    """Game with winner name as result."""
+
+    def __init__(self, name, players, winner):
+        """Game with winner constructor."""
+        super().__init__(name, players)
+        self.winner = winner
+
+    def get_winner(self):
+        """Get winner."""
+        return self.winner
+
+
+if __name__ == '__main__':
+    statistic = Statistics('data.txt')
+    print(statistic.get("/players"))  # == лист с именами ВСЕХ игроков в файле
+    print(statistic.get("/games"))  # == лист с названиями ВСЕХ игорей в файле
+    # print(statistic.get("/total"))  # == число сыграных игр
+    # statistic.get("/total/places")  # == 1
+    #
+    # print(statistic.get("/player/joosep/amount"))  # == 4
+    print(statistic.get("/game/terraforming mars/record-holder"))
