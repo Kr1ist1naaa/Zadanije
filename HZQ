@@ -1,0 +1,15 @@
+def edge_numbers_as_one_number(numbers: list) -> int:
+ """
+ Return the first and the last number of the list as one number.
+ #1
+ Numbers are non-negative. The list contains at least 2 elements.
+ edge_numbers_as_one_number([1, 2]) => 12
+ edge_numbers_as_one_number([1, 2, 3]) => 13
+ edge_numbers_as_one_number([11, 2, 3]) => 113
+ edge_numbers_as_one_number([11, 2, 34]) => 1134
+ edge_numbers_as_one_number([0, 2, 3, 4]) => 4
+ edge_numbers_as_one_number([0, 0, 0, 0]) => 0
+ :param numbers: list of non-negative integers.
+ :return: the first and the last numbers combined.
+ """
+
